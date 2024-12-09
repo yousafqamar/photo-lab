@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Lab</title>
+    <link rel="stylesheet" href="./src/css/main.css">
+    <!-- Fabric.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Photo Lab</h1>
+        </header>
+
+        <div class="canvas-controls">
+            <div class="dimension-controls">
+                <div class="input-group">
+                    <label for="canvasWidth">Width (inches):</label>
+                    <input type="number" id="canvasWidth" min="1" max="100" value="8" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="canvasHeight">Height (inches):</label>
+                    <input type="number" id="canvasHeight" min="1" max="100" value="4" step="0.1">
+                </div>
+                <button id="createCanvas">Create</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="photo-canvas"></canvas>
+        </div>
+        <!-- Add inside the .container, after canvas-container -->
+        <div class="sidebar">
+            <h2>Templates</h2>
+            <div class="template-list">
+                <!-- Templates will be added here dynamically -->
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="./src/js/main.js"></script>
+</body>
+</html>
