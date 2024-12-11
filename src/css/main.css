@@ -243,3 +243,27 @@ button:hover {
     color: #4CAF50;
     font-weight: bold;
 }
+
+
+.canvas-container {
+    position: relative;
+}
+
+.drag-over {
+    border: 2px dashed #4CAF50 !important;
+}
+
+.canvas-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.canvas-container.drag-over::after {
+    background-color: rgba(76, 175, 80, 0.1);
+}
