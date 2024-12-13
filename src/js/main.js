@@ -203,42 +203,95 @@ class PhotoLab {
         const reader = new FileReader();
         const canvas = this.canvas;
         const zoom = canvas.getZoom();
-        
+
         // Get drop coordinates relative to canvas
         const rect = canvas.getElement().getBoundingClientRect();
         const x = (e.clientX - rect.left) / zoom;
         const y = (e.clientY - rect.top) / zoom;
-    
+
         reader.onload = (event) => {
-            fabric.Image.fromURL(event.target.result, (img) => {
-                // Find the drop zone that was dropped on
-                const dropZone = this.findDropZone(x, y);
-                if (dropZone) {
-                    // Remove existing image in this zone if any
-                    this.clearDropZone(dropZone.id);
-                    
+            // Find the drop zone that was dropped on
+            const dropZone = this.findDropZone(x, y);
+            if (dropZone) {
+                // Remove existing image in this zone if any
+                this.clearDropZone(dropZone.id);
+
+                // Create new image
+                fabric.Image.fromURL(event.target.result, (img) => {
                     // Create a clipping rect
                     const clipRect = new fabric.Rect({
-                        left: 0,
-                        top: 0,
+                        left: dropZone.left,
+                        top: dropZone.top,
                         width: dropZone.width,
                         height: dropZone.height,
                         absolutePositioned: true
                     });
-    
-                    // Fit and clip image to drop zone
-                    this.fitImageToZone(img, dropZone, clipRect);
+
+                    // Calculate scaling to fit image within drop zone
+                    const scaleX = dropZone.width / img.width;
+                    const scaleY = dropZone.height / img.height;
+                    const scale = Math.max(scaleX, scaleY); // Use max to cover the area
+
+                    // Set image properties
+                    img.set({
+                        left: dropZone.left,
+                        top: dropZone.top,
+                        scaleX: scale,
+                        scaleY: scale,
+                        clipPath: clipRect,
+                        dropzoneId: dropZone.id,
+                        selectable: true
+                    });
+
+                    // Center the image within the clip area
+                    const scaledWidth = img.width * scale;
+                    const scaledHeight = img.height * scale;
+
+                    img.set({
+                        left: dropZone.left + (dropZone.width - scaledWidth) / 2,
+                        top: dropZone.top + (dropZone.height - scaledHeight) / 2
+                    });
+
+                    // Add movement constraints
+                    img.on('moving', function(e) {
+                        const currentLeft = this.left;
+                        const currentTop = this.top;
+                        const maxLeft = dropZone.left;
+                        const maxTop = dropZone.top;
+                        const minLeft = dropZone.left - (scaledWidth - dropZone.width);
+                        const minTop = dropZone.top - (scaledHeight - dropZone.height);
+
+                        // Constrain horizontal movement
+                        if (currentLeft > maxLeft) this.set('left', maxLeft);
+                        if (currentLeft < minLeft) this.set('left', minLeft);
+
+                        // Constrain vertical movement
+                        if (currentTop > maxTop) this.set('top', maxTop);
+                        if (currentTop < minTop) this.set('top', minTop);
+                    });
+
+                    // Add the image to canvas
+                    canvas.add(img);
                     canvas.renderAll();
-                }
-            });
+
+                    // Remove the placeholder text
+                    const text = canvas.getObjects().find(obj => 
+                        obj.id === `droptext_${dropZone.id.split('_')[1]}`
+                    );
+                    if (text) {
+                        canvas.remove(text);
+                    }
+                });
+            }
         };
-    
+
         reader.readAsDataURL(file);
     }
 
     findDropZone(x, y) {
         const objects = this.canvas.getObjects();
         return objects.find(obj => {
+            console.log( 'obj: ', obj );
             return obj.type === 'rect' && 
                    obj.id && 
                    obj.id.startsWith('dropzone_') &&
@@ -260,11 +313,6 @@ class PhotoLab {
             }
         });
 
-        // Remove the placeholder text
-        const text = objects.find(obj => obj.id === `droptext_${index}`);
-        if (text) {
-            this.canvas.remove(text);
-        }
     }
 
     fitImageToZone(img, dropZone) {
