@@ -83,6 +83,8 @@ class PhotoLab {
 
         // Make canvas responsive
         this.makeCanvasResponsive();
+        
+        this.afterCanvasInit();
     }
 
 //    applyTemplate(templateId) {
@@ -291,188 +293,195 @@ class PhotoLab {
 //    }
 
     handleImageDrop(file, e) {
-    const reader = new FileReader();
-    const canvas = this.canvas;
-    const zoom = canvas.getZoom();
+        const reader = new FileReader();
+        const canvas = this.canvas;
+        const zoom = canvas.getZoom();
 
-    const rect = canvas.getElement().getBoundingClientRect();
-    const x = (e.clientX - rect.left) / zoom;
-    const y = (e.clientY - rect.top) / zoom;
+        const rect = canvas.getElement().getBoundingClientRect();
+        const x = (e.clientX - rect.left) / zoom;
+        const y = (e.clientY - rect.top) / zoom;
 
-    reader.onload = (event) => {
-        const dropZone = this.findDropZone(x, y);
-        if (dropZone) {
-            this.clearDropZone(dropZone.id);
+        reader.onload = (event) => {
+            const dropZone = this.findDropZone(x, y);
+            if (dropZone) {
+                this.clearDropZone(dropZone.id);
 
-            fabric.Image.fromURL(event.target.result, (img) => {
-                // Create a clipping rect
-                const clipRect = new fabric.Rect({
-                    left: dropZone.left,
-                    top: dropZone.top,
-                    width: dropZone.getScaledWidth(),
-                    height: dropZone.getScaledHeight(),
-                    absolutePositioned: true
+                fabric.Image.fromURL(event.target.result, (img) => {
+                    // Create a clipping rect
+                    const clipRect = new fabric.Rect({
+                        left: dropZone.left,
+                        top: dropZone.top,
+                        width: dropZone.getScaledWidth(),
+                        height: dropZone.getScaledHeight(),
+                        absolutePositioned: true
+                    });
+
+                    // Calculate scaling to fit image within drop zone
+                    const scaleX = dropZone.getScaledWidth() / img.width;
+                    const scaleY = dropZone.getScaledHeight() / img.height;
+                    const scale = Math.max(scaleX, scaleY);
+
+                    // Set image properties
+                    img.set({
+                        left: dropZone.left,
+                        top: dropZone.top,
+                        scaleX: scale,
+                        scaleY: scale,
+                        clipPath: clipRect,
+                        dropzoneId: dropZone.id,
+                        selectable: false // Initially not selectable
+                    });
+
+                    // Center the image
+                    const scaledWidth = img.width * scale;
+                    const scaledHeight = img.height * scale;
+
+                    img.set({
+                        left: dropZone.left + (dropZone.width - scaledWidth) / 2,
+                        top: dropZone.top + (dropZone.height - scaledHeight) / 2
+                    });
+
+                    // Add the image to canvas
+                    canvas.add(img);
+
+                    // Update dropzone properties
+                    dropZone.set({
+                        fill: 'transparent',
+                        stroke: '#cccccc',
+                        strokeWidth: 1,
+                        selectable: true,
+                        hasControls: true,
+                        hasBorders: true,
+                        lockRotation: true,
+                        hoverCursor: 'pointer'
+                    });
+
+                    // Keep dropzone above image
+//                    canvas.bringToFront(dropZone);
+
+                    // Add double click handler to dropzone
+//                    dropZone.on('mousedblclick', function() {
+//                        const image = canvas.getObjects().find(obj => 
+//                            obj.dropzoneId === this.id && obj.type === 'image'
+//                        );
+//
+//                        if (image) {
+//                            // Toggle image selectability
+//                            const isSelectable = !image.selectable;
+//                            image.set({
+//                                selectable: isSelectable,
+//                                hoverCursor: isSelectable ? 'move' : 'default'
+//                            });
+//
+//                            // Add movement constraints when image is selectable
+//                            if (isSelectable) {
+//                                image.on('moving', function(e) {
+//                                    const currentLeft = this.left;
+//                                    const currentTop = this.top;
+//                                    const dropZone = canvas.getObjects().find(obj => 
+//                                        obj.id === this.dropzoneId
+//                                    );
+//
+//                                    if (dropZone) {
+//                                        const maxLeft = dropZone.left;
+//                                        const maxTop = dropZone.top;
+//                                        const minLeft = dropZone.left - (scaledWidth - dropZone.width);
+//                                        const minTop = dropZone.top - (scaledHeight - dropZone.height);
+//
+//                                        // Constrain horizontal movement
+//                                        if (currentLeft > maxLeft) this.set('left', maxLeft);
+//                                        if (currentLeft < minLeft) this.set('left', minLeft);
+//
+//                                        // Constrain vertical movement
+//                                        if (currentTop > maxTop) this.set('top', maxTop);
+//                                        if (currentTop < minTop) this.set('top', minTop);
+//                                    }
+//                                });
+//                            }
+//
+//                            canvas.renderAll();
+//                        }
+//                    });
+
+                    // Add scaling handler to dropzone
+//                    dropZone.on('scaling', function() {
+//                        const image = canvas.getObjects().find(obj => 
+//                            obj.dropzoneId === this.id && obj.type === 'image'
+//                        );
+//
+//                        if (image && image.clipPath) {
+//                            // Update clip path dimensions
+//                            image.clipPath.set({
+//                                width: this.getScaledWidth(),
+//                                height: this.getScaledHeight(),
+//                                left: this.left,
+//                                top: this.top
+//                            });
+//
+//                            // Recalculate image scale
+//                            const newScaleX = this.getScaledWidth() / image.width;
+//                            const newScaleY = this.getScaledHeight() / image.height;
+//                            const newScale = Math.max(newScaleX, newScaleY);
+//
+//                            // Update image position and scale
+//                            image.set({
+//                                scaleX: newScale,
+//                                scaleY: newScale,
+//                                left: this.left + (this.getScaledWidth() - (image.width * newScale)) / 2,
+//                                top: this.top + (this.getScaledHeight() - (image.height * newScale)) / 2
+//                            });
+//                        }
+//                    });
+
+                    // Add moving handler to dropzone
+//                    dropZone.on('moving', function() {
+//                        const image = canvas.getObjects().find(obj => 
+//                            obj.dropzoneId === this.id && obj.type === 'image'
+//                        );
+//
+//                        if (image && image.clipPath) {
+//                            // Update clip path position
+//                            image.clipPath.set({
+//                                left: this.left,
+//                                top: this.top
+//                            });
+//
+//                            // Move image with dropzone
+//                            const offsetX = image.left - (image.clipPath.left + (image.clipPath.width - image.width * image.scaleX) / 2);
+//                            const offsetY = image.top - (image.clipPath.top + (image.clipPath.height - image.height * image.scaleY) / 2);
+//
+//                            image.set({
+//                                left: this.left + offsetX,
+//                                top: this.top + offsetY
+//                            });
+//                        }
+//                    });
+
+                    canvas.renderAll();
+
+                    // Remove placeholder text if it exists
+//                    const text = canvas.getObjects().find(obj => 
+//                        obj.id === `droptext_${dropZone.id.split('_')[1]}`
+//                    );
+//                    if (text) {
+//                        canvas.remove(text);
+//                    }
                 });
+            }
+        };
 
-                // Calculate scaling to fit image within drop zone
-                const scaleX = dropZone.getScaledWidth() / img.width;
-                const scaleY = dropZone.getScaledHeight() / img.height;
-                const scale = Math.max(scaleX, scaleY);
-
-                // Set image properties
-                img.set({
-                    left: dropZone.left,
-                    top: dropZone.top,
-                    scaleX: scale,
-                    scaleY: scale,
-                    clipPath: clipRect,
-                    dropzoneId: dropZone.id,
-                    selectable: false // Initially not selectable
-                });
-
-                // Center the image
-                const scaledWidth = img.width * scale;
-                const scaledHeight = img.height * scale;
-                
-                img.set({
-                    left: dropZone.left + (dropZone.width - scaledWidth) / 2,
-                    top: dropZone.top + (dropZone.height - scaledHeight) / 2
-                });
-
-                // Add the image to canvas
-                canvas.add(img);
-
-                // Update dropzone properties
-                dropZone.set({
-                    fill: 'transparent',
-                    stroke: '#cccccc',
-                    strokeWidth: 1,
-                    selectable: true,
-                    hasControls: true,
-                    hasBorders: true,
-                    lockRotation: true,
-                    hoverCursor: 'pointer'
-                });
-
-                // Keep dropzone above image
-                canvas.bringToFront(dropZone);
-
-                // Add double click handler to dropzone
-                dropZone.on('mousedblclick', function() {
-                    const image = canvas.getObjects().find(obj => 
-                        obj.dropzoneId === this.id && obj.type === 'image'
-                    );
-                    
-                    if (image) {
-                        // Toggle image selectability
-                        const isSelectable = !image.selectable;
-                        image.set({
-                            selectable: isSelectable,
-                            hoverCursor: isSelectable ? 'move' : 'default'
-                        });
-
-                        // Add movement constraints when image is selectable
-                        if (isSelectable) {
-                            image.on('moving', function(e) {
-                                const currentLeft = this.left;
-                                const currentTop = this.top;
-                                const dropZone = canvas.getObjects().find(obj => 
-                                    obj.id === this.dropzoneId
-                                );
-
-                                if (dropZone) {
-                                    const maxLeft = dropZone.left;
-                                    const maxTop = dropZone.top;
-                                    const minLeft = dropZone.left - (scaledWidth - dropZone.width);
-                                    const minTop = dropZone.top - (scaledHeight - dropZone.height);
-
-                                    // Constrain horizontal movement
-                                    if (currentLeft > maxLeft) this.set('left', maxLeft);
-                                    if (currentLeft < minLeft) this.set('left', minLeft);
-
-                                    // Constrain vertical movement
-                                    if (currentTop > maxTop) this.set('top', maxTop);
-                                    if (currentTop < minTop) this.set('top', minTop);
-                                }
-                            });
-                        }
-
-                        canvas.renderAll();
-                    }
-                });
-
-                // Add scaling handler to dropzone
-                dropZone.on('scaling', function() {
-                    const image = canvas.getObjects().find(obj => 
-                        obj.dropzoneId === this.id && obj.type === 'image'
-                    );
-                    
-                    if (image && image.clipPath) {
-                        // Update clip path dimensions
-                        image.clipPath.set({
-                            width: this.getScaledWidth(),
-                            height: this.getScaledHeight(),
-                            left: this.left,
-                            top: this.top
-                        });
-
-                        // Recalculate image scale
-                        const newScaleX = this.getScaledWidth() / image.width;
-                        const newScaleY = this.getScaledHeight() / image.height;
-                        const newScale = Math.max(newScaleX, newScaleY);
-
-                        // Update image position and scale
-                        image.set({
-                            scaleX: newScale,
-                            scaleY: newScale,
-                            left: this.left + (this.getScaledWidth() - (image.width * newScale)) / 2,
-                            top: this.top + (this.getScaledHeight() - (image.height * newScale)) / 2
-                        });
-                    }
-                });
-
-                // Add moving handler to dropzone
-                dropZone.on('moving', function() {
-                    const image = canvas.getObjects().find(obj => 
-                        obj.dropzoneId === this.id && obj.type === 'image'
-                    );
-                    
-                    if (image && image.clipPath) {
-                        // Update clip path position
-                        image.clipPath.set({
-                            left: this.left,
-                            top: this.top
-                        });
-
-                        // Move image with dropzone
-                        const offsetX = image.left - (image.clipPath.left + (image.clipPath.width - image.width * image.scaleX) / 2);
-                        const offsetY = image.top - (image.clipPath.top + (image.clipPath.height - image.height * image.scaleY) / 2);
-                        
-                        image.set({
-                            left: this.left + offsetX,
-                            top: this.top + offsetY
-                        });
-                    }
-                });
-
-                canvas.renderAll();
-
-                // Remove placeholder text if it exists
-                const text = canvas.getObjects().find(obj => 
-                    obj.id === `droptext_${dropZone.id.split('_')[1]}`
-                );
-                if (text) {
-                    canvas.remove(text);
-                }
-            });
-        }
-    };
-
-    reader.readAsDataURL(file);
-}
+        reader.readAsDataURL(file);
+    }
 
 
     addImageLayer() {
+        
+         // Check if canvas exists and is initialized
+        if (!this.canvas || !this.canvas.getElement()) {
+            alert('Please create a canvas first');
+            return;
+        }
+        
         const canvasCenter = this.canvas.getCenter();
         const size = 200;
 
@@ -511,6 +520,7 @@ class PhotoLab {
             type: 'rect'
         });
 
+        imageLayer.set( 'top', canvasCenter.top - imageLayer.height/2 );
         this.canvas.add(imageLayer);
         this.canvas.setActiveObject(imageLayer);
         this.canvas.renderAll();
@@ -520,10 +530,16 @@ class PhotoLab {
     }
     
     addTextLayer() {
-        const text = new fabric.Textbox('Double click to edit', {
-            left: 50,
-            top: 50,
-            width: 200,
+        if (!this.canvas || !this.canvas.getElement()) {
+            alert('Please create a canvas first');
+            return;
+        }
+        const canvasCenter = this.canvas.getCenter();
+        const size = 200;
+        const textLayer = new fabric.Textbox('Double click to edit', {
+            left: canvasCenter.left - size/2,
+            top: canvasCenter.top - size/2,
+            width: size,
             fontSize: 20,
             fontFamily: 'Arial',
             fill: '#000000',
@@ -536,16 +552,11 @@ class PhotoLab {
             hasBorders: true,
             selectable: true
         });
-
-        this.canvas.add(text);
-        this.canvas.setActiveObject(text);
+        textLayer.set( 'top', canvasCenter.top - textLayer.height/2 );
+        this.canvas.add(textLayer);
+        this.canvas.setActiveObject(textLayer);
         this.canvas.renderAll();
     }
-
-// Add this to your app object if you're using one
-//app.addTextLayer = addTextLayer;
-
-
     
     findDropZone(x, y) {
         const objects = this.canvas.getObjects();
@@ -616,6 +627,30 @@ class PhotoLab {
             });
         }
         this.setupSelectionInfo();
+    }
+
+    afterCanvasInit() {
+        // Disable rotation for all objects
+        fabric.Object.prototype.lockRotation = true;
+
+        // Remove the rotation control (mtr) for all objects
+        fabric.Object.prototype.controls = {
+            ...fabric.Object.prototype.controls,
+            mtr: new fabric.Control({ visible: false })
+        };
+
+        // If you want to specifically apply to text objects
+        fabric.Textbox.prototype.controls = {
+            ...fabric.Textbox.prototype.controls,
+            mtr: new fabric.Control({ visible: false })
+        };
+
+        // For images, you might want to add this as well
+        fabric.Image.prototype.controls = {
+            ...fabric.Image.prototype.controls,
+            mtr: new fabric.Control({ visible: false })
+        };
+
     }
 
     setupSelectionInfo() {
