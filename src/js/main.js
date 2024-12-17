@@ -550,7 +550,8 @@ class PhotoLab {
             transparentCorners: false,
             hasControls: true,
             hasBorders: true,
-            selectable: true
+            selectable: true,
+            textAlign:'center'
         });
         textLayer.set( 'top', canvasCenter.top - textLayer.height/2 );
         this.canvas.add(textLayer);
