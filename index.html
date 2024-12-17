@@ -26,6 +26,23 @@
                 </div>
                 <button id="createCanvas">Create</button>
             </div>
+            <div class="additional-controls">
+                
+                <button onclick="app.addImageLayer()">Add Image Layer</button>
+                <button onclick="app.addTextLayer()">Add Text Layer</button>
+
+                <div class="input-group selected-layer-dims">
+                    
+                    <div class="selected-layer-dims">
+                        <span>Selected layer:
+                        <label>X</label><input type="number" name="layer_x" id="layer-x">
+                        <label>Y</label><input type="number" name="layer_y" id="layer-y">
+                        <label>W</label><input type="number" name="layer_w" id="layer-w">
+                        <label>H</label><input type="number" name="layer_h" id="layer-h">
+                    </div>
+
+                </div>
+            </div>
         </div>
 
         <div class="canvas-container">
