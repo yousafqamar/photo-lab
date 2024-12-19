@@ -343,7 +343,7 @@ class PhotoLab {
 
                     // Add the image to canvas
                     canvas.add(img);
-
+console.log( 'dropZone:', dropZone );
                     // Update dropzone properties
                     dropZone.set({
                         fill: 'transparent',
@@ -525,6 +525,7 @@ class PhotoLab {
         this.canvas.setActiveObject(imageLayer);
         this.canvas.renderAll();
 
+        this.setupDropZone();
         // Log to verify the object is created correctly
         console.log('Added new drop zone:', imageLayer);
     }
@@ -651,9 +652,9 @@ class PhotoLab {
             ...fabric.Image.prototype.controls,
             mtr: new fabric.Control({ visible: false })
         };
-
+        
     }
-
+    
     setupSelectionInfo() {
         // Get references to input fields
         const layerXInput = document.getElementById('layer-x');
@@ -712,7 +713,7 @@ class PhotoLab {
 
     updateSelectionInfo() {
         const selectedObject = this.canvas.getActiveObject();
-        console.info(selectedObject);
+//        console.info(selectedObject);
         if (selectedObject) {
             // Get references to input fields
             const layerXInput = document.getElementById('layer-x');
